@@ -11,7 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"
         app:orientation="vertical"
-        app:color="#f00"
+        android:background="@drawable/maxresdefault"
+        app:color="#d93540"
         />
 
 </android.support.constraint.ConstraintLayout>
