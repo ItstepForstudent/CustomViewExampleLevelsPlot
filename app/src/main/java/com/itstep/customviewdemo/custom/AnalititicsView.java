@@ -5,7 +5,11 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -22,6 +26,7 @@ public class AnalititicsView extends View {
     public AnalititicsView(Context context) {
         super(context);
         initGester(context);
+        this.setLayerType(View.LAYER_TYPE_SOFTWARE, mPaint);
     }
     public AnalititicsView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -33,6 +38,7 @@ public class AnalititicsView extends View {
             typedArray.recycle();
         }
         initGester(context);
+        this.setLayerType(View.LAYER_TYPE_SOFTWARE, mPaint);
     }
 
     int mColor = 0;
@@ -162,12 +168,14 @@ public class AnalititicsView extends View {
         if (lvs.size() > 0) {
             int w = ((mOrientation == 1) ? mWidth : mHeight) / lvs.size();
 
+            mPaint.setShadowLayer(w/10,w/10,w/10,0x99000000);
             for (int pos = 0; pos < lvs.size(); pos++) {
                 if (mOrientation == 1)
                     canvas.drawRect(new Rect(pos * w + (int) (w * 0.2), mHeight - lvs.get(pos), pos * w + (int) (w * 0.8), mHeight), mPaint);
                 else
                     canvas.drawRect(new Rect(0, pos * w + (int) (w * 0.2), lvs.get(pos), pos * w + (int) (w * 0.8)), mPaint);
             }
+            mPaint.clearShadowLayer();
 
         }
 
@@ -183,5 +191,64 @@ public class AnalititicsView extends View {
     @Override
     protected void onFocusChanged(boolean gainFocus, int direction, @Nullable Rect previouslyFocusedRect) {
         super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+    }
+
+    static class SavedState extends BaseSavedState{
+        int orientation;
+        int color;
+
+
+        public SavedState(Parcel source) {
+            super(source);
+            this.orientation=source.readInt();
+            this.color=source.readInt();
+        }
+
+        public SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeInt(orientation);
+            out.writeInt(color);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR = new Parcelable.Creator<SavedState>(){
+            @Override
+            public SavedState createFromParcel(Parcel source) {
+                return new SavedState(source);
+            }
+
+            @Override
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+    }
+
+
+    @Nullable
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable parcelable = super.onSaveInstanceState();
+        SavedState state =new SavedState(parcelable);
+        state.color = mColor;
+        state.orientation = mOrientation;
+        return state;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if(!(state instanceof SavedState)){
+            super.onRestoreInstanceState(state);
+            return;
+        }
+        SavedState state1 = (SavedState) state;
+        super.onRestoreInstanceState(state1.getSuperState());
+        mColor = state1.color;
+        mOrientation = state1.orientation;
+
     }
 }
